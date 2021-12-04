@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+	<Metadata>
+        <Identity Id="DebugObjectExporter.b5669c86-50af-4aeb-9151-bd2b659c3f84" Version="1.0" Language="en-US" Publisher="Igor Kryvenko" />
+        <DisplayName>DebugObjectExporter</DisplayName>
+        <Description xml:space="preserve">Extension helps you export out an objectsExtension helps you export out an objects in Visual Studio while debugging. Based on this ObjectExporter (https://github.com/OmarElabd/ObjectExporter)</Description>
+		<MoreInfo>https://github.com/ukrgerri4/DebugObjectExporter</MoreInfo>
+        <License>License.txt</License>
+        <ReleaseNotes>ReleaseNotes.txt</ReleaseNotes>
+        <Icon>DebugObjectExporter.ico</Icon>
+        <Preview>true</Preview>
+	</Metadata>
+	<Installation>
+		<InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.0, 17.0)" />
+    </Installation>
+    <Dependencies>
+		<Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
+    </Dependencies>
+    <Prerequisites>
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[16.0,17.0)" DisplayName="Visual Studio core editor" />
+    </Prerequisites>
+    <Assets>
+        <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    </Assets>
+</PackageManifest>
