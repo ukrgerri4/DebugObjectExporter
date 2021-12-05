@@ -9,6 +9,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugObjectExporter.Core", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugObjectExporter.Package2019", "src\DebugObjectExporter.Package2019\DebugObjectExporter.Package2019.csproj", "{EF809C85-C3C2-485B-BD8B-90E3FAEF0752}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_documentation", "_documentation", "{6C2BC93E-F6DC-4514-AE56-25CB8CE46C83}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\DebugObjectExporter.Shared\DebugObjectExporter.Shared.projitems*{c96d246b-5d80-43ab-9e03-cd8869db4498}*SharedItemsImports = 13

@@ -1,10 +1,12 @@
 ﻿using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using Task = System.Threading.Tasks.Task;
 
@@ -44,7 +46,9 @@ namespace DebugObjectExporter.Shared.Commands
             "short?",
             "ushort",
             "ushort?",
-            "string"
+            "string",
+            "System.Guid",
+            "System.Guid?"
         };
         /// <summary>
         /// Command ID.
@@ -118,7 +122,6 @@ namespace DebugObjectExporter.Shared.Commands
         /// <param name="e">The event args.</param>
         private void Execute(object sender, EventArgs e)
         {
-            // TODO: inmplement new logic 
             this.package.JoinableTaskFactory.RunAsync(async delegate
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -126,35 +129,61 @@ namespace DebugObjectExporter.Shared.Commands
                 var expressions = dte2?.Debugger?.CurrentStackFrame?.Locals?
                     .Cast<Expression>()
                     .ToList();
-
-                if (expressions != null && expressions.Any())
+                try
                 {
-                    dynamic obj = new ExpandoObject();
-                    foreach (Expression expression in expressions)
+                    if (expressions != null && expressions.Any())
                     {
-                        if (expression.IsValidValue)
-                        {
-                            var members = expression.DataMembers.Cast<Expression>().ToList();
-                            if (!members.Any())
-                            {
-                                ((IDictionary<string, object>)obj).Add(expression.Name, expression.Value);
-                                break;
-                            }
+                        dynamic obj = new ExpandoObject();
+                        Process(obj, expressions);
+                        var settings = new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, Formatting = Formatting.Indented };
+                        string result = JsonConvert.SerializeObject(obj, settings);
 
-                            if (SimpleTypes.Contains(expression.Type))
-                            {
-                                obj[expression.Name] = expression.Value;
-                            }
-                            //else
-                            //{
-                            //    expression.DataMembers.Cast<Expression>().ToList();
-                            //}
-                        }
+                        File.WriteAllText("d:/data.json", result);
                     }
-
-                    var result = Newtonsoft.Json.JsonConvert.SerializeObject(obj);
+                }
+                catch (Exception ex)
+                {
+                    var m = ex.Message;
                 }
             });
+        }
+
+        private void Process(ExpandoObject storage, List<Expression> expressions)
+        {
+            foreach (Expression expression in expressions)
+            {
+                if (expression.IsValidValue)
+                {
+                    var storageDic = storage as IDictionary<string, object>;
+                    if (SimpleTypes.Contains(expression.Type))
+                    {
+                        storageDic.Add(expression.Name, GetValue(expression.Type, expression.Value));
+                        continue;
+                    }
+
+                    var members = expression.DataMembers.Cast<Expression>().ToList();
+                    if (members.Any())
+                    {
+                        storageDic.Add(expression.Name, new ExpandoObject());
+                        Process((ExpandoObject)storageDic[expression.Name], members);
+                    }
+                }
+            }
+        }
+
+        private object GetValue(string type, string value)
+        {
+            switch (type)
+            {
+                case "int":
+                    return Convert.ToInt32(value);
+                case "string":
+                    return value.Trim('\"');
+                case "System.Guid":
+                    return value.Trim('{', '}');
+                default:
+                    return "";
+            }
         }
     }
 }
