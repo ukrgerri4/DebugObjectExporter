@@ -19,36 +19,23 @@ namespace DebugObjectExporter.Shared.Commands
     {
         private string[] SimpleTypes = {
             "bool",
-            "bool?",
             "byte",
-            "byte?",
             "sbyte",
-            "sbyte?",
             "char",
-            "char?",
             "decimal",
-            "decimal?",
             "double",
-            "double?",
             "float",
-            "float?",
             "int",
-            "int?",
             "uint",
-            "uint?",
             "long",
-            "long?",
             "ulong",
-            "ulong?",
-            "object",
-            "object?",
             "short",
-            "short?",
             "ushort",
-            "ushort?",
             "string",
             "System.Guid",
-            "System.Guid?"
+            "System.TimeSpan",
+            "System.DateTime",
+            "System.DateTimeOffset"
         };
         /// <summary>
         /// Command ID.
@@ -154,11 +141,27 @@ namespace DebugObjectExporter.Shared.Commands
             {
                 if (expression.IsValidValue)
                 {
+                    if (ShouldIgnore(expression.Name))
+                    {
+                        continue;
+                    }
+
                     var storageDic = storage as IDictionary<string, object>;
-                    if (SimpleTypes.Contains(expression.Type))
+                    if (expression.Value == "null")
+                    {
+                        storageDic.Add(expression.Name, null);
+                        continue;
+                    }
+
+                    if (SimpleTypes.Contains(expression.Type.TrimEnd('?')))
                     {
                         storageDic.Add(expression.Name, GetValue(expression.Type, expression.Value));
                         continue;
+                    }
+
+                    if (IfEnumerableType(expression))
+                    {
+
                     }
 
                     var members = expression.DataMembers.Cast<Expression>().ToList();
@@ -171,18 +174,77 @@ namespace DebugObjectExporter.Shared.Commands
             }
         }
 
+        private bool IfEnumerableType(Expression expression)
+        {
+            return expression.Type.StartsWith("System.Collections")
+                || expression.Value.StartsWith("Count =") && expression.DataMembers.Cast<Expression>().Any();
+        }
+
+        private bool ShouldIgnore(string name)
+        {
+            switch (name)
+            {
+                case "Raw View":
+                case "Static members":
+                case "Non-Public members":
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         private object GetValue(string type, string value)
         {
+            if (type.EndsWith("?"))
+            {
+                if (value == "null")
+                {
+                    return null;
+                }
+                else
+                {
+                    type = type.TrimEnd('?');
+                }
+            }
+
             switch (type)
             {
+                case "bool":
+                    return Convert.ToBoolean(value);
+                case "byte":
+                    return Convert.ToByte(value);
+                case "sbyte":
+                    return Convert.ToByte(value);
+                case "char":
+                    return Convert.ToChar(value);
+                case "short":
+                    return Convert.ToInt16(value);
+                case "ushort":
+                    return Convert.ToUInt16(value);
                 case "int":
                     return Convert.ToInt32(value);
+                case "uint":
+                    return Convert.ToUInt32(value);
+                case "long":
+                    return Convert.ToInt64(value);
+                case "ulong":
+                    return Convert.ToUInt64(value);
+                case "decimal":
+                    return Convert.ToDecimal(value);
+                case "double":
+                    return Convert.ToDouble(value);
+                case "float":
+                    return (float)Convert.ToDouble(value);
+
                 case "string":
                     return value.Trim('\"');
                 case "System.Guid":
+                case "System.TimeSpan":
+                case "System.DateTime":
+                case "System.DateTimeOffset":
                     return value.Trim('{', '}');
                 default:
-                    return "";
+                    return null;
             }
         }
     }
